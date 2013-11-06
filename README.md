@@ -1,4 +1,4 @@
 icat_authn
 ==========
 
-ICAT authenticators
+ICAT authenticator repository for Umbrella, Moonshot, and RADIUS
