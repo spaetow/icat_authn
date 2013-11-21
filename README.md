@@ -20,7 +20,7 @@ Acknowledgements
 Licences
 --------
 
-Portions of the code used in this repository is licenced to you under the 
+Portions of the code used in this repository are licenced to you under the 
 Apache License v2.0, while the majority of the ICAT source is licenced under
 the FreeBSD (BSD 2-Clause) License. To see what the implications are for you,
 visit the [tl;drLegal Comparison](http://www.tldrlegal.com/compare?a=BSD+2-Clause+License+%28FreeBSD%29&b=Apache+License+2.0+%28Apache-2.0%29) for these licences. 
