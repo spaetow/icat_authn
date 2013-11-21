@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document xmlns="http://maven.apache.org/XDOC/2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/XDOC/2.0 http://maven.apache.org/xsd/xdoc-2.0.xsd">
+
+    <properties>
+        <title>Authn Shibboleth-to-Local Plugin Installation</title>
+    </properties>
+
+    <body>
+
+        <section name="Installation">
+
+            <p>To deploy an Authn Shibboleth-to-Local Plugin you need:
+            </p>
+            <ol>
+                <li> a suitable container to support EJBs,</li>
+                <li> to install a copy of authn_shib2local.properties in the correct place,</li>
+                <li> to deploy the .ear file,</li>
+                <li> and see if it works.</li>
+            </ol>
+
+            <subsection name="EJB Container">
+                <p> In principle you can use any EJB container. Testing has been performed with
+                    glassfish 3.1.2 and these notes refer to that version.
+                </p>
+
+                <p> You must already have a Java SE installed (i.e. the command "java" is known), then
+                    you can get Java EE 6 SDK Update 4 with JDK 6
+                    Update 31 or later from
+                    http://www.oracle.com/technetwork/java/javaee/downloads/index.html and execute the script.
+                </p>
+
+                <p> Request custom installation, install and configure, and enter proxy details if
+                    necessary on your site. Request a server domain, set
+                    the domain name and set the
+                    admin password. For a secure deployment of glassfish you should obtain a trusted certificate rather
+                    than
+                    using the self-signed one in the distribution.
+                </p>
+
+            </subsection>
+
+            <subsection name="authn_shib2local.properties">
+                <p>
+                    In the unpacked authn_shib2local.ear-${project.version}-config.zip file you will find a property file, authn_shib2local.properties, which
+                    should be copied to the config directory for your chosen glassfish domain. You will find your domain directory at
+                    $GLASSFISH_HOME/glassfish/domains. The authn_shib2local.properties file may need changing:
+                </p>
+
+                <dl>
+                    <dt>ip</dt>
+                    <dd>If access to Shibboleth-to-Local authentication should only be allowed from certain
+                        IP addresses then provide a space separated list of
+                        allowed values. These
+                        take the form of an IPV4 or IPV6 address followed by the number of bits
+                        (starting from the most
+                        significant) to consider.
+                    </dd>
+
+                    <dt>mechanism</dt>
+                    <dd>if specified is a label to appear before the user name as it is made available to ICAT for authorization. For example if this
+                        is set to 'shibboleth' then the user 'xyz123' will be provided to ICAT as 'shibboleth/xyz123', but of no mechanism is specified it will be
+                        provided simply as 'xyz123'.
+                    </dd>
+                </dl>
+
+            </subsection>
+            <subsection name="Installing the .ear file">
+                <p>
+                    If you already have an authn_shib2local installed then you should first remove it with
+                    <tt>asadmin --port 4848 undeploy &lt;ear&gt;</tt>
+                    where the value of "ear" can be found by:
+                    <tt>asadmin --port 4848 list-applications</tt>
+                    Obtain
+                    <a href="${repoUrl}/org/icatproject/authn_shib2local.ear/${project.version}/authn_shib2local.ear-${project.version}.ear">authn_shib2local.ear-${project.version}.ear</a>
+                    and install it with the command:
+                    <tt>asadmin --port 4848 deploy authn_shib2local.ear-${project.version}.ear</tt>
+                    . If you have only one domain you may not need to specify the port and if the admin port is not 4848 then specify the correct
+                    value.
+                </p>
+
+            </subsection>
+            <subsection name="Check that authn_shib2local works">
+                <p>
+                    There is currently no stand alone mechanism to check that authn_shib2local is working properly. Please use the test.py script that comes
+                    with the ICAT
+                    installation if one of your root users can be authorized with this plugin.
+                </p>
+
+                <p>In case of problems look at the log files: server.log and authn_shib2local.log which can both be found in the logs directory below your
+                    domain.
+                </p>
+            </subsection>
+
+
+        </section>
+    </body>
+</document>
+			
