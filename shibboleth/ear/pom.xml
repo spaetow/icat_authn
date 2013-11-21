@@ -3,19 +3,19 @@
 
     <parent>
         <groupId>org.icatproject</groupId>
-        <artifactId>authn_ldap</artifactId>
-        <version>1.0.1-SNAPSHOT</version>
+        <artifactId>authn_shibboleth</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>authn_ldap.ear</artifactId>
+    <artifactId>authn_shibboleth.ear</artifactId>
     <packaging>ear</packaging>
 
     <dependencies>
 
         <dependency>
             <groupId>org.icatproject</groupId>
-            <artifactId>authn_ldap.ejb</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
+            <artifactId>authn_shibboleth.ejb</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
             <type>ejb</type>
         </dependency>
 
@@ -56,8 +56,8 @@
         </plugins>
     </build>
 
-    <description>ICAT database authentication plugin ear file</description>
-    <name>ICAT LDAP Authn EAR</name>
+    <description>ICAT Shibboleth authentication plugin ear file</description>
+    <name>ICAT Shibboleth Authn EAR</name>
 </project>
 
 
