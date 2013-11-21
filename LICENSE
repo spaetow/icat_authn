@@ -1,6 +1,13 @@
 Copyright (c) 2013, Diamond Light Source, Ltd. and The ICAT Collaboration
 All rights reserved.
 
+Portions of this code are:
+  Copyright (c) 2013, Ubiquitous Knowledge Processing (UKP) Lab. 
+  Technische Universität Darmstadt. All rights reserved.
+  
+  Code licensed under the Apache License, Version 2.0, available here:
+    https://github.com/reckart/shib-http-client/blob/master/LICENSE.txt
+
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
@@ -11,8 +18,9 @@ are permitted provided that the following conditions are met:
   list of conditions and the following disclaimer in the documentation and/or
   other materials provided with the distribution.
 
-* Neither the name of Diamond Light Source or the ICAT Collaboration nor the names of its
-  contributors may be used to endorse or promote products derived from
+* Neither the name of Diamond Light Source, The ICAT Collaboration, Ubiquitous 
+  Knowledge Processing (UKP) Lab, or Technische Universität Darmstadt, nor the 
+  names of its contributors may be used to endorse or promote products derived from
   this software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
