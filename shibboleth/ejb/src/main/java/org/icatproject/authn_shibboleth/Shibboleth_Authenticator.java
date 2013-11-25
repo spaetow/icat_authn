@@ -153,7 +153,7 @@ public class Shibboleth_Authenticator implements Authenticator {
 
         } catch (final AuthenticationException e) {
             throw new IcatException(IcatException.IcatExceptionType.SESSION,
-                    "Failed to authenticate " + username + " at " + this.identityProviderUrl);
+                    "Failed to authenticate " + username + " at " + this.identityProviderUrl + ". Error: " + e.toString());
         } catch (final SOAPClientException e) {
             throw new IcatException(IcatException.IcatExceptionType.SESSION,
                     "The Shibboleth service provider at " + this.serviceProviderUrl + " is not configured for ECP authentication.");
