@@ -12,6 +12,7 @@ import javax.ejb.Stateless;
 import javax.management.AttributeNotFoundException;
 import javax.security.sasl.AuthenticationException;
 
+import org.apache.http.HttpHost;
 import org.apache.log4j.Logger;
 import org.icatproject.authentication.AddressChecker;
 import org.icatproject.authentication.Authentication;
@@ -32,6 +33,7 @@ public class Shibboleth_Authenticator implements Authenticator {
 	private static final Logger log = Logger.getLogger(Shibboleth_Authenticator.class);
 	private String serviceProviderUrl;
 	private String identityProviderUrl;
+	private HttpHost proxyConnection; 
 	private org.icatproject.authentication.AddressChecker addressChecker;
 	private String mechanism;
 
@@ -75,8 +77,28 @@ public class Shibboleth_Authenticator implements Authenticator {
 			throw new IllegalStateException(msg);
 		}
 
+		// proxy access is optional, but if the host is specified, the port is required
+		String proxyHost = props.getProperty("proxy_host");
+		if (spURL != null) {
+			String proxyPort = props.getProperty("proxy_port");
+			if (proxyPort == null) {
+				String msg = "proxyHost specified, but proxyPort not defined in " + f.getAbsolutePath();
+				log.fatal(msg);
+				throw new IllegalStateException(msg);
+			}
+			else {
+				// only set up a proxy connection if we have everything
+				this.proxyConnection = new HttpHost(proxyHost, Integer.parseInt(proxyPort));
+			}
+		}
+		else
+		{
+			// we clearly don't have a proxy, or we're using what's defined for the JVM
+			this.proxyConnection = null;
+		}
+
 		// Note that the mechanism is optional
-		mechanism = props.getProperty("mechanism");
+		this.mechanism = props.getProperty("mechanism");
 
         this.serviceProviderUrl = spURL;
         this.identityProviderUrl = idpURL;
@@ -112,12 +134,13 @@ public class Shibboleth_Authenticator implements Authenticator {
 
         try {
             // Initialise the library
-            DefaultBootstrap.bootstrap();
+/*            DefaultBootstrap.bootstrap();
             final BasicParserPool parserPool = new BasicParserPool();
             parserPool.setNamespaceAware(true);
-
+*/
             // Instantiate a copy of the client, catch any errors that occur
-            ShibbolethECPAuthClient seac = new ShibbolethECPAuthClient(this.identityProviderUrl, this.serviceProviderUrl, true);
+            ShibbolethECPAuthClient seac = new ShibbolethECPAuthClient(this.proxyConnection, this.identityProviderUrl, 
+            		this.serviceProviderUrl, true);
 
             final Response response = seac.authenticate(username, password);
 

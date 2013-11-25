@@ -30,6 +30,12 @@
             <version>1.2.16</version>
         </dependency>
 
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.3</version>
+		</dependency>
+
         <dependency>
             <groupId>uk.ac.diamond</groupId>
             <artifactId>ShibbolethECPAuthClient</artifactId>
