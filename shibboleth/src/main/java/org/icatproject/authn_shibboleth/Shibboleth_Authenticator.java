@@ -18,10 +18,8 @@ import org.icatproject.authentication.AddressChecker;
 import org.icatproject.authentication.Authentication;
 import org.icatproject.authentication.Authenticator;
 import org.icatproject.core.IcatException;
-import org.opensaml.DefaultBootstrap;
 import org.opensaml.saml2.core.Response;
 import org.opensaml.ws.soap.client.SOAPClientException;
-import org.opensaml.xml.parse.BasicParserPool;
 
 import uk.ac.diamond.ShibbolethECPAuthClient.ShibbolethECPAuthClient;
 
@@ -31,10 +29,15 @@ import uk.ac.diamond.ShibbolethECPAuthClient.ShibbolethECPAuthClient;
 public class Shibboleth_Authenticator implements Authenticator {
 
 	private static final Logger log = Logger.getLogger(Shibboleth_Authenticator.class);
+	
 	private String serviceProviderUrl;
+	
 	private String identityProviderUrl;
-	private HttpHost proxyConnection; 
+	
+	private HttpHost proxyConnection;
+	
 	private org.icatproject.authentication.AddressChecker addressChecker;
+	
 	private String mechanism;
 
 	@SuppressWarnings("unused")
@@ -137,6 +140,7 @@ public class Shibboleth_Authenticator implements Authenticator {
             ShibbolethECPAuthClient seac = new ShibbolethECPAuthClient(this.proxyConnection, this.identityProviderUrl, 
             		this.serviceProviderUrl, true);
 
+            // Try to authenticate. If authentication failed, an AuthenticationException is thrown
             final Response response = seac.authenticate(username, password);
 
             // return a new authentication object
