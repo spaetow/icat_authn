@@ -67,6 +67,7 @@ public class Shibboleth_Authenticator implements Authenticator {
 			}
 		}
 
+		// we require a Service Provider and an Identity Provider
 		String spURL = props.getProperty("service_provider_url");
 		if (spURL == null) {
 			String msg = "service_provider_url not defined in " + f.getAbsolutePath();
@@ -137,13 +138,13 @@ public class Shibboleth_Authenticator implements Authenticator {
 
         try {
             // Instantiate a copy of the client, catch any errors that occur
-            ShibbolethECPAuthClient seac = new ShibbolethECPAuthClient(this.proxyConnection, this.identityProviderUrl, 
-            		this.serviceProviderUrl, true);
+            ShibbolethECPAuthClient ecpClient = new ShibbolethECPAuthClient(this.proxyConnection, this.identityProviderUrl, 
+            		this.serviceProviderUrl, false);
 
             // Try to authenticate. If authentication failed, an AuthenticationException is thrown
-            final Response response = seac.authenticate(username, password);
+            final Response response = ecpClient.authenticate(username, password);
 
-            // return a new authentication object
+            // Return a new authentication object
             log.info(username + " logged in successfully");
             return new Authentication(username, mechanism);
 
