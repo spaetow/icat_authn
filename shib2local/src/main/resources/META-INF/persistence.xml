@@ -4,7 +4,7 @@
 
     <persistence-unit name="db_shib2local" transaction-type="JTA">
         <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
-        <jta-data-source>jdbc/authn_shib2local</jta-data-source>
+        <jta-data-source>jdbc/fed_id_map</jta-data-source>
         <class>org.icatproject.authn_shib2local.FedIdMap</class>
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
         <properties>

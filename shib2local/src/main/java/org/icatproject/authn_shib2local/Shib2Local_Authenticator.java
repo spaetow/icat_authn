@@ -1,15 +1,20 @@
-package org.icatproject.authn_shibboleth;
+package org.icatproject.authn_shib2local;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Remote;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionManagement;
+import javax.ejb.TransactionManagementType;
 import javax.management.AttributeNotFoundException;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.security.sasl.AuthenticationException;
 
 import org.apache.http.HttpHost;
@@ -30,10 +35,14 @@ import uk.ac.diamond.ShibbolethECPAuthClient.ShibbolethECPAuthClient;
 
 /* Mapped name is to avoid name clashes */
 @Stateless(mappedName = "org.icatproject.authn_shib2local.Shib2Local_Authenticator")
+@TransactionManagement(TransactionManagementType.BEAN)
 @Remote
 public class Shib2Local_Authenticator implements Authenticator {
 
 	private static final Logger log = Logger.getLogger(Shib2Local_Authenticator.class);
+
+	@PersistenceContext(unitName = "db_shib2local")
+	private EntityManager manager;
 
 	private String serviceProviderUrl;
 
@@ -150,50 +159,53 @@ public class Shib2Local_Authenticator implements Authenticator {
 		}
 
 		log.info("Checking username/password on Shibboleth server");
+        String lookupAttributeValue = null;
 
         try {
-            // Instantiate a copy of the client, try to authentication, catch any errors that occur
-            ShibbolethECPAuthClient ecpClient = new ShibbolethECPAuthClient(this.proxyConnection, this.identityProviderUrl, 
-            		this.serviceProviderUrl, false);
-
             // Initialise the library
             DefaultBootstrap.bootstrap();
             final BasicParserPool parserPool = new BasicParserPool();
             parserPool.setNamespaceAware(true);
+            
+            // Instantiate a copy of the client, try to authentication, catch any errors that occur
+            ShibbolethECPAuthClient ecpClient = new ShibbolethECPAuthClient(this.proxyConnection, this.identityProviderUrl, 
+            		this.serviceProviderUrl, false);
 
             // if we get an exception here with our 'chained' get(...) calls, we have a problem anyway!
-            boolean idFound = false;
-            String lookupAttributeValue;
-            List<Attribute> attributes = ecpClient.authenticate(username, password)
-            								.getAssertions().get(0)
-            								.getAttributeStatements().get(0)
-            								.getAttributes();
+            List<Attribute> attributes = ecpClient.authenticate(username, password).getAssertions().get(0)
+            		.getAttributeStatements().get(0).getAttributes();
 
-            if (!attributes.isEmpty()) {
-                for (Attribute attribute : attributes) {
-                    if ((attribute.getName().indexOf(this.lookupAttribute) == 0) ||
-                        (attribute.getFriendlyName().indexOf(this.lookupAttribute) == 0)) {
-                        idFound = true;
-                        XMLObject attributeValue = attribute.getAttributeValues().get(0);
-                        if (attributeValue instanceof XSString) {
-                        	lookupAttributeValue = ((XSString) attributeValue).getValue();
-                        } else if (attributeValue instanceof XSAny) {
-                        	lookupAttributeValue = ((XSAny) attributeValue).getTextContent();
-                        }
-                        log.debug("Attribute: " + this.lookupAttribute + ", value: " + lookupAttributeValue);
-                    } // if getName()...
-                } // for attribute...
-            } // if not empty
-
-            if (!idFound) {
-                throw new IcatException(IcatException.IcatExceptionType.SESSION,
-                        "The Shibboleth attribute " + this.lookupAttribute + " was not returned by the Shibboleth server");
+            // if there are no attributes, we can't do a lookup.
+            if (attributes.isEmpty()) {
+                throw new AttributeNotFoundException("The Shibboleth Identity Provider returned a SAML assertion with no attributes");
             }
-
-            // Return a new authentication object
-            log.info(username + " logged in successfully");
-            return new Authentication(username, mechanism);
-
+            
+            // trawl the attributes to check if we can find ours
+            boolean idFound = false;
+            for (Attribute attribute : attributes) {
+                if ((attribute.getName().indexOf(this.lookupAttribute) == 0) ||
+                    (attribute.getFriendlyName().indexOf(this.lookupAttribute) == 0)) {
+                    idFound = true;
+                    XMLObject attributeValue = attribute.getAttributeValues().get(0);
+                    if (attributeValue instanceof XSString) {
+                        lookupAttributeValue = ((XSString) attributeValue).getValue();
+                    } else if (attributeValue instanceof XSAny) {
+                        lookupAttributeValue = ((XSAny) attributeValue).getTextContent();
+                    }
+                    log.debug("Attribute: " + this.lookupAttribute + ", value: " + lookupAttributeValue);
+                    break;
+                } // if getName()...
+            } // for attribute...
+            
+            // Attribute was not found in the SAML statement
+            if (!idFound) {
+            	final String s = "The attribute " + this.lookupAttribute + " was not returned by the Shibboleth Identity Provider";
+                throw new AttributeNotFoundException(s);
+            }
+        } catch (final AttributeNotFoundException e) {
+            throw new IcatException(IcatException.IcatExceptionType.SESSION, 
+            		username + " authenticated successfully at " + this.identityProviderUrl + 
+        			", but the identity provider returned insufficient information. Error: " + e.toString());
         } catch (final AuthenticationException e) {
             throw new IcatException(IcatException.IcatExceptionType.SESSION,
                     "Failed to authenticate " + username + " at " + this.identityProviderUrl + ". Error: " + e.toString());
@@ -204,5 +216,18 @@ public class Shib2Local_Authenticator implements Authenticator {
             throw new IcatException(IcatException.IcatExceptionType.SESSION,
                     "An error occurred trying to authenticate user " + username + ". Error: " + e.toString());
         }
+        
+        log.debug("Entity Manager is " + manager);
+        log.debug("User successfully authenticated by " + this.identityProviderUrl + ". Attempting local account lookup.");
+        FedIdMap fedId = this.manager.find(FedIdMap.class, lookupAttributeValue);
+        if (fedId == null) {
+            throw new IcatException(IcatException.IcatExceptionType.SESSION,
+                    "Unable to find a local account for Shibboleth user " + username);
+        }
+
+        // Return a new authentication object
+        log.info(username + " logged in and mapped to " + fedId.getLocalUid() + " successfully.");
+        return new Authentication(fedId.getLocalUid(), mechanism);
+
     }
 }
