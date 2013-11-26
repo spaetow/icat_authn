@@ -2,13 +2,22 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/DECORATION/1.0.0 http://maven.apache.org/xsd/decoration-1.0.0.xsd">
   <body>
-    <menu name="Contents">
-    
+  
+    <breadcrumbs>
+      <item name="Authn Shibboleth" href="index.html"/>
+    </breadcrumbs>
+
+    <menu name="Information for Users">    
+       <item name="Issue Tracking" href="issue-tracking.html"/>
+        <item name="Release Notes" href="release-notes.html"/>
+    </menu>
+       
+    <menu name="Information for Installers">
     <item name="Authn Shibboleth Plugin Installation" href="installation.html"/>
     </menu>
-   
+    
     <menu ref="reports"/>
-    <menu ref="parent"/>
-     
+    <menu ref="modules"/>
+ 
   </body>
 </project>
