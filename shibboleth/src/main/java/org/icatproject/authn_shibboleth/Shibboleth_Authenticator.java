@@ -29,13 +29,13 @@ import uk.ac.diamond.ShibbolethECPAuthClient.ShibbolethECPAuthClient;
 public class Shibboleth_Authenticator implements Authenticator {
 
 	private static final Logger log = Logger.getLogger(Shibboleth_Authenticator.class);
-	
+
 	private String serviceProviderUrl;
 	
 	private String identityProviderUrl;
-	
+
 	private HttpHost proxyConnection;
-	
+
 	private org.icatproject.authentication.AddressChecker addressChecker;
 	
 	private String mechanism;
@@ -104,6 +104,7 @@ public class Shibboleth_Authenticator implements Authenticator {
 		// Note that the mechanism is optional
 		this.mechanism = props.getProperty("mechanism");
 
+		// set up our required variables
         this.serviceProviderUrl = spURL;
         this.identityProviderUrl = idpURL;
 
