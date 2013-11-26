@@ -79,7 +79,7 @@ public class Shibboleth_Authenticator implements Authenticator {
 
 		// proxy access is optional, but if the host is specified, the port is required
 		String proxyHost = props.getProperty("proxy_host");
-		if (spURL != null) {
+		if (proxyHost != null) {
 			String proxyPort = props.getProperty("proxy_port");
 			if (proxyPort == null) {
 				String msg = "proxyHost specified, but proxyPort not defined in " + f.getAbsolutePath();
