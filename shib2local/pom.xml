@@ -4,7 +4,7 @@
     <groupId>org.icatproject</groupId>
     <artifactId>authn_shib2local</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <packaging>pom</packaging>
+    <packaging>war</packaging>
 
     <distributionManagement>
         <downloadUrl>http://www.icatproject.org/mvn/repo</downloadUrl>
