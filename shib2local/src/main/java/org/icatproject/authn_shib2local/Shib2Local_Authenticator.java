@@ -34,11 +34,17 @@ import uk.ac.diamond.ShibbolethECPAuthClient.ShibbolethECPAuthClient;
 public class Shib2Local_Authenticator implements Authenticator {
 
 	private static final Logger log = Logger.getLogger(Shib2Local_Authenticator.class);
+
 	private String serviceProviderUrl;
+
 	private String identityProviderUrl;
-	private String requiredAttribute;
+
+	private String lookupAttribute;
+
 	private HttpHost proxyConnection; 
+
 	private org.icatproject.authentication.AddressChecker addressChecker;
+
 	private String mechanism;
 
 	@SuppressWarnings("unused")
@@ -68,6 +74,7 @@ public class Shib2Local_Authenticator implements Authenticator {
 			}
 		}
 
+		// we require a Service Provider and an Identity Provider, as well as a lookup attribute
 		String spURL = props.getProperty("service_provider_url");
 		if (spURL == null) {
 			String msg = "service_provider_url not defined in " + f.getAbsolutePath();
@@ -80,16 +87,16 @@ public class Shib2Local_Authenticator implements Authenticator {
 			log.fatal(msg);
 			throw new IllegalStateException(msg);
 		}
-		String reqAttribute = props.getProperty("userid_attribute");
-		if (reqAttribute == null) {
-			String msg = "userid_attribute not defined in " + f.getAbsolutePath();
+		String samlAttribute = props.getProperty("lookup_attribute");
+		if (samlAttribute == null) {
+			String msg = "lookup_attribute not defined in " + f.getAbsolutePath();
 			log.fatal(msg);
 			throw new IllegalStateException(msg);
 		}
 
 		// proxy access is optional, but if the host is specified, the port is required
 		String proxyHost = props.getProperty("proxy_host");
-		if (spURL != null) {
+		if (proxyHost != null) {
 			String proxyPort = props.getProperty("proxy_port");
 			if (proxyPort == null) {
 				String msg = "proxyHost specified, but proxyPort not defined in " + f.getAbsolutePath();
@@ -110,9 +117,10 @@ public class Shib2Local_Authenticator implements Authenticator {
 		// Note that the mechanism is optional
 		this.mechanism = props.getProperty("mechanism");
 
+		// set up our required variables
         this.serviceProviderUrl = spURL;
         this.identityProviderUrl = idpURL;
-        this.requiredAttribute = reqAttribute;
+        this.lookupAttribute = samlAttribute;
 
 		log.debug("Initialised Shib2Local_Authenticator");
 	}
@@ -144,45 +152,45 @@ public class Shib2Local_Authenticator implements Authenticator {
 		log.info("Checking username/password on Shibboleth server");
 
         try {
+            // Instantiate a copy of the client, try to authentication, catch any errors that occur
+            ShibbolethECPAuthClient ecpClient = new ShibbolethECPAuthClient(this.proxyConnection, this.identityProviderUrl, 
+            		this.serviceProviderUrl, false);
+
             // Initialise the library
             DefaultBootstrap.bootstrap();
             final BasicParserPool parserPool = new BasicParserPool();
             parserPool.setNamespaceAware(true);
 
-            // Instantiate a copy of the client, try to authentication, catch any errors that occur
-            ShibbolethECPAuthClient seac = new ShibbolethECPAuthClient(this.proxyConnection, this.identityProviderUrl, 
-            		this.serviceProviderUrl, true);
-
             // if we get an exception here with our 'chained' get(...) calls, we have a problem anyway!
             boolean idFound = false;
-            String requiredAttributeValue;
-            List<Attribute> attributes = seac.authenticate(username, password)
+            String lookupAttributeValue;
+            List<Attribute> attributes = ecpClient.authenticate(username, password)
             								.getAssertions().get(0)
             								.getAttributeStatements().get(0)
             								.getAttributes();
 
             if (!attributes.isEmpty()) {
                 for (Attribute attribute : attributes) {
-                    if ((attribute.getName().indexOf(this.requiredAttribute) == 0) ||
-                        (attribute.getFriendlyName().indexOf(this.requiredAttribute) == 0)) {
+                    if ((attribute.getName().indexOf(this.lookupAttribute) == 0) ||
+                        (attribute.getFriendlyName().indexOf(this.lookupAttribute) == 0)) {
                         idFound = true;
                         XMLObject attributeValue = attribute.getAttributeValues().get(0);
                         if (attributeValue instanceof XSString) {
-                        	requiredAttributeValue = ((XSString) attributeValue).getValue();
+                        	lookupAttributeValue = ((XSString) attributeValue).getValue();
                         } else if (attributeValue instanceof XSAny) {
-                        	requiredAttributeValue = ((XSAny) attributeValue).getTextContent();
+                        	lookupAttributeValue = ((XSAny) attributeValue).getTextContent();
                         }
-                        log.debug("Attribute: " + this.requiredAttribute + ", value: " + requiredAttributeValue);
+                        log.debug("Attribute: " + this.lookupAttribute + ", value: " + lookupAttributeValue);
                     } // if getName()...
                 } // for attribute...
             } // if not empty
 
             if (!idFound) {
                 throw new IcatException(IcatException.IcatExceptionType.SESSION,
-                        "The Shibboleth attribute " + this.requiredAttribute + " was not returned by the Shibboleth server");
+                        "The Shibboleth attribute " + this.lookupAttribute + " was not returned by the Shibboleth server");
             }
 
-            // return a new authentication object
+            // Return a new authentication object
             log.info(username + " logged in successfully");
             return new Authentication(username, mechanism);
 
