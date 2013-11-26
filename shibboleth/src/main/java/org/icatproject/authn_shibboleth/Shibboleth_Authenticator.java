@@ -133,43 +133,12 @@ public class Shibboleth_Authenticator implements Authenticator {
 		log.info("Checking username/password on Shibboleth server");
 
         try {
-            // Initialise the library
-/*            DefaultBootstrap.bootstrap();
-            final BasicParserPool parserPool = new BasicParserPool();
-            parserPool.setNamespaceAware(true);
-*/
             // Instantiate a copy of the client, catch any errors that occur
             ShibbolethECPAuthClient seac = new ShibbolethECPAuthClient(this.proxyConnection, this.identityProviderUrl, 
             		this.serviceProviderUrl, true);
 
             final Response response = seac.authenticate(username, password);
 
-/*
-            Assertion assertion = response.getAssertions().get(0);
-            AttributeStatement as = assertion.getAttributeStatements().get(0);
-
-            List<org.opensaml.saml2.core.Attribute> attributes = as.getAttributes();
-            boolean idFound = false;
-            if (!attributes.isEmpty()) {
-                for (Attribute attribute : attributes) {
-                    if ((attribute.getName().indexOf(attributeId) == 0) ||
-                        (attribute.getFriendlyName().indexOf(attributeId) == 0)) {
-                        idFound = true;
-                        XMLObject attributeValue = attribute.getAttributeValues().get(0);
-                        if (attributeValue instanceof XSString) {
-                            log.debug("Attribute: " + attributeId + ", value: " + ((XSString) attributeValue).getValue());
-                        } else if (attributeValue instanceof XSAny) {
-                            log.debug("Attribute: " + attributeId + ", value: " + ((XSAny) attributeValue).getTextContent());
-                        }
-                    } // if getName()...
-                } // for attribute...
-            } // if not empty
-
-            if (!idFound) {
-                throw new IcatException(IcatException.IcatExceptionType.SESSION,
-                        "The Shibboleth attribute " + this.requiredAttribute + " was not returned by the Shibboleth server");
-            }
-*/
             // return a new authentication object
             log.info(username + " logged in successfully");
             return new Authentication(username, mechanism);
