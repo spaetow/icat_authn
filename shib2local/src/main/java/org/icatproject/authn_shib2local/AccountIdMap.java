@@ -7,18 +7,18 @@ import javax.persistence.Id;
 
 @SuppressWarnings("serial")
 @Entity
-public class FedIdMap implements Serializable {
+public class AccountIdMap implements Serializable {
 
 	@Id
-	private String shibId;
+	private String external_Id;
 
-	private String localUid;
+	private String local_Uid;
 
 	// Needed by JPA
-	public FedIdMap() {
+	public AccountIdMap() {
 	}
 
 	public String getLocalUid() {
-		return localUid;
+		return local_Uid;
 	}
 }

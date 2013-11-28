@@ -4,8 +4,8 @@
 
     <persistence-unit name="db_shib2local" transaction-type="JTA">
         <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
-        <jta-data-source>jdbc/fed_id_map</jta-data-source>
-        <class>org.icatproject.authn_shib2local.FedIdMap</class>
+        <jta-data-source>jdbc/account_id_map</jta-data-source>
+        <class>org.icatproject.authn_shib2local.AccountIdMap</class>
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
         <properties>
             <property name="eclipselink.target-server" value="SunAS9" />

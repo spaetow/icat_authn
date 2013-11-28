@@ -31,7 +31,7 @@ import org.opensaml.xml.parse.BasicParserPool;
 import org.opensaml.xml.schema.XSAny;
 import org.opensaml.xml.schema.XSString;
 
-import uk.ac.diamond.ShibbolethECPAuthClient.ShibbolethECPAuthClient;
+import uk.ac.diamond.shibbolethecpauthclient.ShibbolethECPAuthClient;
 
 /* Mapped name is to avoid name clashes */
 @Stateless(mappedName = "org.icatproject.authn_shib2local.Shib2Local_Authenticator")
@@ -219,7 +219,7 @@ public class Shib2Local_Authenticator implements Authenticator {
         
         log.debug("Entity Manager is " + manager);
         log.debug("User successfully authenticated by " + this.identityProviderUrl + ". Attempting local account lookup.");
-        FedIdMap fedId = this.manager.find(FedIdMap.class, lookupAttributeValue);
+        AccountIdMap fedId = this.manager.find(AccountIdMap.class, lookupAttributeValue);
         if (fedId == null) {
             throw new IcatException(IcatException.IcatExceptionType.SESSION,
                     "Unable to find a local account for Shibboleth user " + username);
@@ -228,6 +228,5 @@ public class Shib2Local_Authenticator implements Authenticator {
         // Return a new authentication object
         log.info(username + " logged in and mapped to " + fedId.getLocalUid() + " successfully.");
         return new Authentication(fedId.getLocalUid(), mechanism);
-
     }
 }
