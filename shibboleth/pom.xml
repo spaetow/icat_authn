@@ -70,6 +70,11 @@
             <id>ICAT Repo</id>
             <url>http://www.icatproject.org/mvn/repo</url>
         </repository>
+        
+        <repository>
+        	<id>Sonatype OSS Staging Repository</id>
+        	<url>http://oss.sonatype.org/content/groups/staging/</url>
+        </repository>
 
     </repositories>
 
@@ -107,8 +112,8 @@
 
         <dependency>
             <groupId>uk.ac.diamond</groupId>
-            <artifactId>ShibbolethECPAuthClient</artifactId>
-            <version>0.1.0</version>
+            <artifactId>shibboleth-ecp-authclient</artifactId>
+            <version>1.0.0</version>
         </dependency>
 
     </dependencies>

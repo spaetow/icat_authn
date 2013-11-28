@@ -21,7 +21,7 @@ import org.icatproject.core.IcatException;
 import org.opensaml.saml2.core.Response;
 import org.opensaml.ws.soap.client.SOAPClientException;
 
-import uk.ac.diamond.ShibbolethECPAuthClient.ShibbolethECPAuthClient;
+import uk.ac.diamond.shibbolethecpauthclient.ShibbolethECPAuthClient;
 
 /* Mapped name is to avoid name clashes */
 @Stateless(mappedName = "org.icatproject.authn_shibboleth.Shibboleth_Authenticator")
