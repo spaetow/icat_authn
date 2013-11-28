@@ -72,8 +72,8 @@
         </repository>
         
         <repository>
-        	<id>Sonatype OSS Staging Repository</id>
-        	<url>http://oss.sonatype.org/content/groups/staging/</url>
+        	<id>Sonatype OSS Public Repository</id>
+        	<url>http://oss.sonatype.org/content/groups/public/</url>
         </repository>
 
     </repositories>
