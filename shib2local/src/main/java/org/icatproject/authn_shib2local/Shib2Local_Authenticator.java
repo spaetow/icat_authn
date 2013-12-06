@@ -141,7 +141,7 @@ public class Shib2Local_Authenticator implements Authenticator {
 		if (addressChecker != null) {
 			if (!addressChecker.check(remoteAddr)) {
 				throw new IcatException(IcatException.IcatExceptionType.SESSION,
-						"authn_shibboleth does not allow log in from your IP address " + remoteAddr);
+						"authn_shib2local does not allow log in from your IP address " + remoteAddr);
 			}
 		}
 
