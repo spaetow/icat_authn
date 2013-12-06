@@ -183,8 +183,8 @@ public class Shib2Local_Authenticator implements Authenticator {
             // trawl the attributes to check if we can find ours
             boolean idFound = false;
             for (Attribute attribute : attributes) {
-                if ((attribute.getName().indexOf(this.lookupAttribute) == 0) ||
-                    (attribute.getFriendlyName().indexOf(this.lookupAttribute) == 0)) {
+                if ((attribute.getName().equals(this.lookupAttribute)) ||
+                    (attribute.getFriendlyName().equals(this.lookupAttribute))) {
                     idFound = true;
                     XMLObject attributeValue = attribute.getAttributeValues().get(0);
                     if (attributeValue instanceof XSString) {
