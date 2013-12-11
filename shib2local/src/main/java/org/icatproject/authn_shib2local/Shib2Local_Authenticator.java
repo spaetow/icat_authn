@@ -50,7 +50,9 @@ public class Shib2Local_Authenticator implements Authenticator {
 
 	private String lookupAttribute;
 
-	private HttpHost proxyConnection; 
+	private boolean disableCertCheck;
+
+	private HttpHost proxyConnection;
 
 	private org.icatproject.authentication.AddressChecker addressChecker;
 
@@ -83,7 +85,7 @@ public class Shib2Local_Authenticator implements Authenticator {
 			}
 		}
 
-		// we require a Service Provider and an Identity Provider, as well as a lookup attribute
+		// We require a Service Provider and an Identity Provider, as well as a lookup attribute
 		String spURL = props.getProperty("service_provider_url");
 		if (spURL == null) {
 			String msg = "service_provider_url not defined in " + f.getAbsolutePath();
@@ -103,7 +105,7 @@ public class Shib2Local_Authenticator implements Authenticator {
 			throw new IllegalStateException(msg);
 		}
 
-		// proxy access is optional, but if the host is specified, the port is required
+		// Proxy access is optional, but if the host is specified, the port is required
 		String proxyHost = props.getProperty("proxy_host");
 		if (proxyHost != null) {
 			String proxyPort = props.getProperty("proxy_port");
@@ -117,19 +119,27 @@ public class Shib2Local_Authenticator implements Authenticator {
 				this.proxyConnection = new HttpHost(proxyHost, Integer.parseInt(proxyPort));
 			}
 		}
-		else
-		{
+		else {
 			// we clearly don't have a proxy, or we're using what's defined for the JVM
 			this.proxyConnection = null;
+		}
+
+		// Disabling the certificate check is optional too, by default it is false
+		String disableCertCheck = props.getProperty("disable_cert_check");
+		if (disableCertCheck == null) {
+			this.disableCertCheck = false;
+		}
+		else { 
+			this.disableCertCheck = disableCertCheck.toLowerCase().equals("true");
 		}
 
 		// Note that the mechanism is optional
 		this.mechanism = props.getProperty("mechanism");
 
-		// set up our required variables
-        this.serviceProviderUrl = spURL;
-        this.identityProviderUrl = idpURL;
-        this.lookupAttribute = samlAttribute;
+		// Set up our required variables
+		this.serviceProviderUrl = spURL;
+		this.identityProviderUrl = idpURL;
+		this.lookupAttribute = samlAttribute;
 
 		log.debug("Initialised Shib2Local_Authenticator");
 	}
@@ -159,74 +169,75 @@ public class Shib2Local_Authenticator implements Authenticator {
 		}
 
 		log.info("Checking username/password on Shibboleth server");
-        String lookupAttributeValue = null;
+		String lookupAttributeValue = null;
+		try {
+			// Initialise the library
+			DefaultBootstrap.bootstrap();
+			final BasicParserPool parserPool = new BasicParserPool();
+			parserPool.setNamespaceAware(true);
 
-        try {
-            // Initialise the library
-            DefaultBootstrap.bootstrap();
-            final BasicParserPool parserPool = new BasicParserPool();
-            parserPool.setNamespaceAware(true);
-            
-            // Instantiate a copy of the client, try to authentication, catch any errors that occur
-            ShibbolethECPAuthClient ecpClient = new ShibbolethECPAuthClient(this.proxyConnection, this.identityProviderUrl, 
-            		this.serviceProviderUrl, false);
+			// Instantiate a copy of the client, catch any errors that occur
+			ShibbolethECPAuthClient ecpClient = new ShibbolethECPAuthClient(this.proxyConnection, this.identityProviderUrl, 
+					this.serviceProviderUrl, this.disableCertCheck);
 
-            // if we get an exception here with our 'chained' get(...) calls, we have a problem anyway!
-            List<Attribute> attributes = ecpClient.authenticate(username, password).getAssertions().get(0)
-            		.getAttributeStatements().get(0).getAttributes();
+			// Try to authenticate. If we get an exception here with our 'chained' get(...) calls, we have a problem anyway!
+			List<Attribute> attributes = ecpClient.authenticate(username, password).getAssertions().get(0)
+					.getAttributeStatements().get(0).getAttributes();
 
-            // if there are no attributes, we can't do a lookup.
-            if (attributes.isEmpty()) {
-                throw new AttributeNotFoundException("The Shibboleth Identity Provider returned a SAML assertion with no attributes");
-            }
-            
-            // trawl the attributes to check if we can find ours
-            boolean idFound = false;
-            for (Attribute attribute : attributes) {
-                if ((attribute.getName().equals(this.lookupAttribute)) ||
-                    (attribute.getFriendlyName().equals(this.lookupAttribute))) {
-                    idFound = true;
-                    XMLObject attributeValue = attribute.getAttributeValues().get(0);
-                    if (attributeValue instanceof XSString) {
-                        lookupAttributeValue = ((XSString) attributeValue).getValue();
-                    } else if (attributeValue instanceof XSAny) {
-                        lookupAttributeValue = ((XSAny) attributeValue).getTextContent();
-                    }
-                    log.debug("Attribute: " + this.lookupAttribute + ", value: " + lookupAttributeValue);
-                    break;
-                } // if getName()...
-            } // for attribute...
-            
-            // Attribute was not found in the SAML statement
-            if (!idFound) {
-            	final String s = "The attribute " + this.lookupAttribute + " was not returned by the Shibboleth Identity Provider";
-                throw new AttributeNotFoundException(s);
-            }
-        } catch (final AttributeNotFoundException e) {
-            throw new IcatException(IcatException.IcatExceptionType.SESSION, 
-            		username + " authenticated successfully at " + this.identityProviderUrl + 
-        			", but the identity provider returned insufficient information. Error: " + e.toString());
-        } catch (final AuthenticationException e) {
-            throw new IcatException(IcatException.IcatExceptionType.SESSION,
-                    "Failed to authenticate " + username + " at " + this.identityProviderUrl + ". Error: " + e.toString());
-        } catch (final SOAPClientException e) {
-            throw new IcatException(IcatException.IcatExceptionType.SESSION,
-                    "The Shibboleth service provider at " + this.serviceProviderUrl + " is not configured for ECP authentication.");
-        } catch (final Exception e) {
-            throw new IcatException(IcatException.IcatExceptionType.SESSION,
-                    "An error occurred trying to authenticate user " + username + ". Error: " + e.toString());
-        }
-        
-        log.debug("Entity Manager is " + manager);
-        log.debug("User successfully authenticated by " + this.identityProviderUrl + ". Attempting local account lookup.");
-        AccountIdMap fedId = this.manager.find(AccountIdMap.class, lookupAttributeValue);
-        if (fedId == null) {
-            throw new IcatException(IcatException.IcatExceptionType.SESSION,
-                    "Unable to find a local account for Shibboleth user " + username);
-        }
+			// If there are no attributes, we can't do a lookup.
+			if (attributes.isEmpty()) {
+				throw new AttributeNotFoundException("The Shibboleth Identity Provider returned a SAML assertion with no attributes");
+			}
 
-        // Return a new authentication object
-        log.info(username + " logged in and mapped to " + fedId.getLocalUid() + " successfully.");
-        return new Authentication(fedId.getLocalUid(), mechanism);
-    }
+			// Trawl the attributes to check if we can find ours
+			boolean idFound = false;
+			for (Attribute attribute : attributes) {
+				if ((attribute.getName().equals(this.lookupAttribute)) ||
+						(attribute.getFriendlyName().equals(this.lookupAttribute))) {
+					idFound = true;
+					XMLObject attributeValue = attribute.getAttributeValues().get(0);
+					if (attributeValue instanceof XSString) {
+						lookupAttributeValue = ((XSString) attributeValue).getValue();
+					} 
+					else if (attributeValue instanceof XSAny) {
+						lookupAttributeValue = ((XSAny) attributeValue).getTextContent();
+					}
+					log.debug("Attribute: " + this.lookupAttribute + ", value: " + lookupAttributeValue);
+					break;
+				}
+			}
+
+			// Attribute was not found in the SAML statement
+			if (!idFound) {
+				final String s = "The attribute " + this.lookupAttribute + " was not returned by the Shibboleth Identity Provider";
+				throw new AttributeNotFoundException(s);
+			}
+		} catch (final AttributeNotFoundException e) {
+			throw new IcatException(IcatException.IcatExceptionType.SESSION, 
+					username + " authenticated successfully at " + this.identityProviderUrl + 
+					", but the identity provider returned insufficient information. Error: " + e.toString());
+		} catch (final AuthenticationException e) {
+			throw new IcatException(IcatException.IcatExceptionType.SESSION,
+					"Failed to authenticate " + username + " at " + this.identityProviderUrl + ". Error: " + e.toString());
+		} catch (final SOAPClientException e) {
+			throw new IcatException(IcatException.IcatExceptionType.SESSION,
+					"The Shibboleth service provider at " + this.serviceProviderUrl + " is not configured for ECP authentication.");
+		} catch (final Exception e) {
+			throw new IcatException(IcatException.IcatExceptionType.SESSION,
+					"An error occurred trying to authenticate user " + username + ". Error: " + e.toString());
+		}
+
+		// Look up the attribute's value in our database to see if we have a mapping for it
+		log.debug("Entity Manager is " + manager);
+		log.debug("User successfully authenticated by " + this.identityProviderUrl + ". Attempting local account lookup.");
+		AccountIdMap fedId = this.manager.find(AccountIdMap.class, lookupAttributeValue);
+		if (fedId == null) {
+			throw new IcatException(IcatException.IcatExceptionType.SESSION,
+					"Unable to find a local account for Shibboleth user " + username);
+		}
+
+		// Return a new authentication object
+		log.info(username + " logged in and mapped to " + fedId.getLocalUid() + " successfully.");
+		return new Authentication(fedId.getLocalUid(), mechanism);
+	}
 }

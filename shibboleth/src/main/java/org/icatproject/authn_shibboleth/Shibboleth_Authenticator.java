@@ -31,13 +31,15 @@ public class Shibboleth_Authenticator implements Authenticator {
 	private static final Logger log = Logger.getLogger(Shibboleth_Authenticator.class);
 
 	private String serviceProviderUrl;
-	
+
 	private String identityProviderUrl;
+
+	private boolean disableCertCheck;
 
 	private HttpHost proxyConnection;
 
 	private org.icatproject.authentication.AddressChecker addressChecker;
-	
+
 	private String mechanism;
 
 	@SuppressWarnings("unused")
@@ -67,7 +69,7 @@ public class Shibboleth_Authenticator implements Authenticator {
 			}
 		}
 
-		// we require a Service Provider and an Identity Provider
+		// We require a Service Provider and an Identity Provider, as well as a lookup attribute
 		String spURL = props.getProperty("service_provider_url");
 		if (spURL == null) {
 			String msg = "service_provider_url not defined in " + f.getAbsolutePath();
@@ -81,7 +83,7 @@ public class Shibboleth_Authenticator implements Authenticator {
 			throw new IllegalStateException(msg);
 		}
 
-		// proxy access is optional, but if the host is specified, the port is required
+		// Proxy access is optional, but if the host is specified, the port is required
 		String proxyHost = props.getProperty("proxy_host");
 		if (proxyHost != null) {
 			String proxyPort = props.getProperty("proxy_port");
@@ -95,18 +97,26 @@ public class Shibboleth_Authenticator implements Authenticator {
 				this.proxyConnection = new HttpHost(proxyHost, Integer.parseInt(proxyPort));
 			}
 		}
-		else
-		{
+		else {
 			// we clearly don't have a proxy, or we're using what's defined for the JVM
 			this.proxyConnection = null;
+		}
+
+		// Disabling the certificate check is optional too, by default it is false
+		String disableCertCheck = props.getProperty("disable_cert_check");
+		if (disableCertCheck == null) {
+			this.disableCertCheck = false;
+		}
+		else { 
+			this.disableCertCheck = disableCertCheck.toLowerCase().equals("true");
 		}
 
 		// Note that the mechanism is optional
 		this.mechanism = props.getProperty("mechanism");
 
-		// set up our required variables
-        this.serviceProviderUrl = spURL;
-        this.identityProviderUrl = idpURL;
+		// Set up our required variables
+		this.serviceProviderUrl = spURL;
+		this.identityProviderUrl = idpURL;
 
 		log.debug("Initialised Shibboleth_Authenticator");
 	}
@@ -136,28 +146,27 @@ public class Shibboleth_Authenticator implements Authenticator {
 		}
 
 		log.info("Checking username/password on Shibboleth server");
+		try {
+			// Instantiate a copy of the client, catch any errors that occur
+			ShibbolethECPAuthClient ecpClient = new ShibbolethECPAuthClient(this.proxyConnection, this.identityProviderUrl, 
+					this.serviceProviderUrl, this.disableCertCheck);
 
-        try {
-            // Instantiate a copy of the client, catch any errors that occur
-            ShibbolethECPAuthClient ecpClient = new ShibbolethECPAuthClient(this.proxyConnection, this.identityProviderUrl, 
-            		this.serviceProviderUrl, false);
+			// Try to authenticate. If authentication failed, an AuthenticationException is thrown
+			final Response response = ecpClient.authenticate(username, password);
 
-            // Try to authenticate. If authentication failed, an AuthenticationException is thrown
-            final Response response = ecpClient.authenticate(username, password);
+			// Return a new authentication object
+			log.info(username + " logged in successfully");
+			return new Authentication(username, mechanism);
 
-            // Return a new authentication object
-            log.info(username + " logged in successfully");
-            return new Authentication(username, mechanism);
-
-        } catch (final AuthenticationException e) {
-            throw new IcatException(IcatException.IcatExceptionType.SESSION,
-                    "Failed to authenticate " + username + " at " + this.identityProviderUrl + ". Error: " + e.toString());
-        } catch (final SOAPClientException e) {
-            throw new IcatException(IcatException.IcatExceptionType.SESSION,
-                    "The Shibboleth service provider at " + this.serviceProviderUrl + " is not configured for ECP authentication.");
-        } catch (final Exception e) {
-            throw new IcatException(IcatException.IcatExceptionType.SESSION,
-                    "An error occurred trying to authenticate user " + username + ". Error: " + e.toString());
-        }
-    }
+		} catch (final AuthenticationException e) {
+			throw new IcatException(IcatException.IcatExceptionType.SESSION,
+					"Failed to authenticate " + username + " at " + this.identityProviderUrl + ". Error: " + e.toString());
+		} catch (final SOAPClientException e) {
+			throw new IcatException(IcatException.IcatExceptionType.SESSION,
+					"The Shibboleth service provider at " + this.serviceProviderUrl + " is not configured for ECP authentication.");
+		} catch (final Exception e) {
+			throw new IcatException(IcatException.IcatExceptionType.SESSION,
+					"An error occurred trying to authenticate user " + username + ". Error: " + e.toString());
+		}
+	}
 }
