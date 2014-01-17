@@ -100,29 +100,29 @@
             <version>1.2.16</version>
         </dependency>
 
-		<dependency>
-			<groupId>commons-logging</groupId>
-			<artifactId>commons-logging-api</artifactId>
-			<version>1.1</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpclient</artifactId>
-			<version>4.3</version>
-		</dependency>
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging-api</artifactId>
+            <version>1.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.3</version>
+        </dependency>
 
         <dependency>
             <groupId>uk.ac.diamond</groupId>
             <artifactId>shibboleth-ecp-authclient</artifactId>
             <version>1.1.0</version>
         </dependency>
-		
-		<dependency>
-			<groupId>de.tudarmstadt.ukp.shibhttpclient</groupId>
-			<artifactId>shib-http-client</artifactId>
-			<version>1.0.0</version>
-		</dependency>
+
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.shibhttpclient</groupId>
+            <artifactId>shib-http-client</artifactId>
+            <version>1.0.0</version>
+        </dependency>
 
     </dependencies>
 
