@@ -3,7 +3,7 @@
 
     <groupId>org.icatproject</groupId>
     <artifactId>authn_shibboleth</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <packaging>war</packaging>
 
     <distributionManagement>
@@ -115,8 +115,14 @@
         <dependency>
             <groupId>uk.ac.diamond</groupId>
             <artifactId>shibboleth-ecp-authclient</artifactId>
-            <version>1.0.0</version>
+            <version>1.1.0</version>
         </dependency>
+		
+		<dependency>
+			<groupId>de.tudarmstadt.ukp.shibhttpclient</groupId>
+			<artifactId>shib-http-client</artifactId>
+			<version>1.0.0</version>
+		</dependency>
 
     </dependencies>
 
@@ -217,6 +223,3 @@
         </plugins>
     </reporting>
 </project>
-
-
-

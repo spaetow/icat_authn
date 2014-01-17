@@ -25,6 +25,7 @@ import org.icatproject.authentication.Authenticator;
 import org.icatproject.core.IcatException;
 import org.opensaml.DefaultBootstrap;
 import org.opensaml.saml2.core.Attribute;
+import org.opensaml.saml2.core.Response;
 import org.opensaml.ws.soap.client.SOAPClientException;
 import org.opensaml.xml.XMLObject;
 import org.opensaml.xml.parse.BasicParserPool;
@@ -180,10 +181,18 @@ public class Shib2Local_Authenticator implements Authenticator {
 			ShibbolethECPAuthClient ecpClient = new ShibbolethECPAuthClient(this.proxyConnection, this.identityProviderUrl, 
 					this.serviceProviderUrl, this.disableCertCheck);
 
-			// Try to authenticate. If we get an exception here with our 'chained' get(...) calls, we have a problem anyway!
-			List<Attribute> attributes = ecpClient.authenticate(username, password).getAssertions().get(0)
-					.getAttributeStatements().get(0).getAttributes();
-
+			// Try to authenticate. If authentication failed, an AuthenticationException is thrown
+			final org.opensaml.saml2.core.Response response = ecpClient.authenticate(username, password);
+			
+			// If we get an exception here with our 'chained' get(...) calls, we have a problem!
+			List<Attribute> attributes;
+			try {
+				 attributes = response.getAssertions().get(0).getAttributeStatements().get(0).getAttributes();
+			}
+			catch (final IndexOutOfBoundsException e) {
+				throw new AttributeNotFoundException("The Shibboleth Identity Provider either returned no SAML assertions or no attribute statements");
+			}
+			
 			// If there are no attributes, we can't do a lookup.
 			if (attributes.isEmpty()) {
 				throw new AttributeNotFoundException("The Shibboleth Identity Provider returned a SAML assertion with no attributes");
