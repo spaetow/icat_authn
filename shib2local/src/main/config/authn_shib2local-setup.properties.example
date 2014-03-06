@@ -1,0 +1,13 @@
+# Driver and connection properties for Oracle
+#driver=oracle.jdbc.pool.OracleDataSource
+#dbProperties=url="'"jdbc:oracle:thin:@//localhost:1521/XE"'":ImplicitCachingEnabled=true:MaxStatements=200:user=authn_shib2local:password=secret
+
+# Driver and connection properties for MySQL
+driver=com.mysql.jdbc.jdbc2.optional.MysqlDataSource
+dbProperties=user=icat:password=secret:databaseName=authn_shib2local
+
+# Must contain "glassfish/domains"
+glassfish=/home/fisher/pf/glassfish3
+
+# Port for glassfish admin calls (normally 4848)
+port=4848

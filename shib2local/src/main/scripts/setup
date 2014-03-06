@@ -1,0 +1,57 @@
+#!/usr/bin/env python
+from setup_utils import *
+import os
+
+# authn_shib2local
+
+actions, options, arg = getActions()
+props = actions.getGlassfish("authn_shib2local-setup.properties", ["dbProperties", "glassfish", "driver", "port"])
+
+prop_name = "authn_shib2local.properties"
+prop_list = []
+
+if arg == "CONFIGURE":
+    actions.configure(prop_name, prop_list)
+    actions.setConfigured()
+    
+elif arg == "INSTALL":
+    
+    actions.checkConfigured()
+           
+    icatProperties = actions.getProperties(prop_name, prop_list)       
+           
+    actions.installFile(prop_name)
+    
+    try:
+        
+        app = actions.getAppName("authn_shib2local")
+        if app: actions.asadmin("undeploy " + app)
+        
+        actions.asadmin("delete-jdbc-resource jdbc/authn_shib2local", tolerant=True)
+        actions.asadmin("delete-jdbc-connection-pool authn_shib2local", tolerant=True)
+        
+        actions.asadmin('create-jdbc-connection-pool --datasourceclassname ' + props["driver"] + 
+                ' --restype javax.sql.DataSource --failconnection=true --steadypoolsize 2' + 
+                ' --maxpoolsize 8 --ping --property ' + props["dbProperties"] + ' authn_shib2local', printOutput=True)
+        
+        actions.asadmin("create-jdbc-resource --connectionpoolid authn_shib2local jdbc/authn_shib2local")
+      
+        actions.deploy("authn_shib2local-*.war")
+                    
+    except Exception, e:
+        abort(str(e))
+               
+else:  # UNINSTALL
+    
+    actions.removeFile(prop_name)
+    
+    try:
+        app = actions.getAppName("authn_shib2local")
+        if app: actions.asadmin("undeploy " + app)
+        actions.asadmin("delete-jdbc-resource jdbc/authn_shib2local", tolerant=True)
+        actions.asadmin("delete-jdbc-connection-pool authn_shib2local", tolerant=True)   
+    except Exception, e:
+        abort(str(e))       
+    
+            
+    
