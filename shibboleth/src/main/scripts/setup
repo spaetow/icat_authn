@@ -1,0 +1,45 @@
+#!/usr/bin/env python
+from setup_utils import *
+import os
+
+# authn_shibboleth
+
+actions, options, arg = getActions()
+
+prop_name = "authn_shibboleth.properties"
+prop_list = []
+
+if arg == "CONFIGURE":
+    actions.configure(prop_name, prop_list)
+    actions.setConfigured()
+    
+elif arg == "INSTALL":
+    
+    actions.checkConfigured()
+           
+    icatProperties = actions.getProperties(prop_name, prop_list)       
+           
+    actions.installFile(prop_name)
+    
+    try:
+        
+        app = actions.getAppName("authn_shibboleth")
+        if app: actions.asadmin("undeploy " + app)
+        
+        actions.deploy("authn_shibboleth-*.war")
+                    
+    except Exception, e:
+        abort(str(e))
+               
+else:  # UNINSTALL
+    
+    actions.removeFile(prop_name)
+    
+    try:
+        app = actions.getAppName("authn_shibboleth")
+        if app: actions.asadmin("undeploy " + app)
+    except Exception, e:
+        abort(str(e))       
+    
+            
+    

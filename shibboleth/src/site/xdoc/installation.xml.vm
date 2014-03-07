@@ -9,88 +9,105 @@
 
         <section name="Installation">
 
-            <p>To deploy an Authn Shibboleth Plugin you need:
-            </p>
-            <ol>
-                <li> a suitable container to support EJBs,</li>
-                <li> to install a copy of authn_shibboleth.properties in the correct place,</li>
-                <li> to deploy the .ear file,</li>
-                <li> and see if it works.</li>
-            </ol>
+            <subsection name="Compatibility">This authentication plugin will work with an ICAT version of 4.3 or greater.</subsection>
 
-            <subsection name="EJB Container">
-                <p> In principle you can use any EJB container. Testing has been performed with
-                    glassfish 3.1.2 and these notes refer to that version.
-                </p>
+            <subsection name="Prerequisites">
 
-                <p> You must already have a Java SE installed (i.e. the command "java" is known), then
-                    you can get Java EE 6 SDK Update 4 with JDK 6
-                    Update 31 or later from
-                    http://www.oracle.com/technetwork/java/javaee/downloads/index.html and execute the script.
-                </p>
+                <ul>
+                    <li>
+                        The authn_shibboleth distribution:
+                        <a href="${repoUrl}/org/icatproject/authn_shibboleth/${project.version}/authn_shibboleth-${project.version}-distro.zip">authn_shibboleth-${project.version}-distro.zip</a>
+                    </li>
+                    <li>
+                        A suitable deployed container (here assumed to be glassfish though tomcat should be sufficient) to support a web
+                        application.
+                        Testing has been carried out with Glassfish 3.1.2.
+                        <a href="https://code.google.com/p/icatproject/wiki/Glassfish">Glassfish installation instructions</a>
+                        are available.
+                    </li>
+                    <li>
+                        A database as described in
+                        <a href="https://code.google.com/p/icatproject/wiki/Databases">Database installation instructions</a>
+                        installed on the server
+                    </li>
 
-                <p> Request custom installation, install and configure, and enter proxy details if
-                    necessary on your site. Request a server domain, set
-                    the domain name and set the
-                    admin password. For a secure deployment of glassfish you should obtain a trusted certificate rather
-                    than
-                    using the self-signed one in the distribution.
-                </p>
+                    <li>
+                        Python (version 2.4 to 2.7) installed on the server.
+                    </li>
+                </ul>
+            </subsection>
 
+            <subsection name="Summary of steps">
+                <ol>
+                    <li>
+                        Please follow
+                        <a href="http://code.google.com/p/icatproject/wiki/Installation"> the generic installation instructions</a>
+                    </li>
+                    <li>Update the icat.properties file for icat to see the authenticator.</li>
+                    <li>Check that it works.</li>
+                </ol>
             </subsection>
 
             <subsection name="authn_shibboleth.properties">
-                <p>
-                    In the unpacked authn_shibboleth.ear-${project.version}-config.zip file you will find a property file, authn_shibboleth.properties, which
-                    should be copied to the config directory for your chosen glassfish domain. You will find your domain directory at
-                    $GLASSFISH_HOME/glassfish/domains. The authn_shibboleth.properties file may need changing:
-                </p>
 
                 <dl>
                     <dt>ip</dt>
                     <dd>If access to Shibboleth authentication should only be allowed from certain
-                        IP addresses then provide a space separated list of
+                        IP addresses then provide a space separated
+                        list of
                         allowed values. These
                         take the form of an IPV4 or IPV6 address followed by the number of bits
                         (starting from the most
                         significant) to consider.
                     </dd>
 
+                    <dt>service_provider_url</dt>
+                    <dd>The Shibboleth-protected web location
+                        with which to initiate authentication.
+                    </dd>
+                    <dt>identity_provider_url</dt>
+                    <dd>
+                        Points directly at the Shibboleth ECP profile
+                        endpoint on the Shibboleth IdP. The URL looks similar to this:
+                        https://MY-IDP-HOST/idp/profile/SAML2/SOAP/ECP
+                    </dd>
+                    <dt>proxy_host</dt>
+                    <dd>Optional name of proxy host. If specified the proxy_port must also be specified</dd>
+                    <dt>proxy_port</dt>
+                    <dd>Optional name of proxy port. If specified the proxy_host must also be specified</dd>
+                    <dt>disable_cert_check</dt>
+                    <dd>Optionally set to true to disabling certificate checking</dd>
                     <dt>mechanism</dt>
                     <dd>if specified is a label to appear before the user name as it is made available to ICAT for authorization. For example if this
-                        is set to 'shibboleth' then the user 'xyz123' will be provided to ICAT as 'shibboleth/xyz123', but of no mechanism is specified it will be
+                        is set to 'shibboleth' then the user 'xyz123' will be provided to ICAT as 'shibboleth/xyz123', but if no mechanism is
+                        specified it will be
                         provided simply as 'xyz123'.
                     </dd>
                 </dl>
 
             </subsection>
-            <subsection name="Installing the .ear file">
-                <p>
-                    If you already have an authn_shibboleth installed then you should first remove it with
-                    <tt>asadmin --port 4848 undeploy &lt;ear&gt;</tt>
-                    where the value of "ear" can be found by:
-                    <tt>asadmin --port 4848 list-applications</tt>
-                    Obtain
-                    <a href="${repoUrl}/org/icatproject/authn_shibboleth.ear/${project.version}/authn_shibboleth.ear-${project.version}.ear">authn_shibboleth.ear-${project.version}.ear</a>
-                    and install it with the command:
-                    <tt>asadmin --port 4848 deploy authn_shibboleth.ear-${project.version}.ear</tt>
-                    . If you have only one domain you may not need to specify the port and if the admin port is not 4848 then specify the correct
-                    value.
-                </p>
 
+            <subsection name="Update the icat.properties file for your ICAT">
+                <p>This is required for icat to see the new authenticator. As any earlier version of this authenticator will have
+                    been removed then it
+                    is important to perform this next step promptly.
+                </p>
+                <p>
+                    If you still have the installation directory for icat then edit the icat.properties to refer to the new authenticator and type:
+                    <tt>./setup install</tt>
+                    Otherwise edit the icat.properties file in the config directory for your domain and restart the glassfish domain.
+                </p>
             </subsection>
+
             <subsection name="Check that authn_shibboleth works">
-                <p>
-                    There is currently no stand alone mechanism to check that authn_shibboleth is working properly. Please use the test.py script that comes
-                    with the ICAT
-                    installation if one of your root users can be authorized with this plugin.
-                </p>
-
-                <p>In case of problems look at the log files: server.log and authn_shibboleth.log which can both be found in the logs directory below your
-                    domain.
+                <p>Use testicat (which is installed with ICAT) for someone with a Shibboleth account.
+                    It should report that it logs in, but may or may not have
+                    the permission to run the rest of the test.
+                    If it does not report that it has logged in then please check the server.log and the
+                    authn_shibboleth.log files which can both be
+                    found in the logs directory below your domain.
                 </p>
             </subsection>
-
 
         </section>
     </body>
