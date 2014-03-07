@@ -113,10 +113,6 @@ public class Shibboleth_Authenticator implements Authenticator {
 			// Try to authenticate. If authentication failed, an AuthenticationException is thrown
 			final Response response = ecpClient.authenticate(username, password);
 
-			// Return a new authentication object
-			logger.info(username + " logged in successfully.");
-			return new Authentication(username, mechanism);
-
 		} catch (final AuthenticationException e) {
 			fail("Failed to authenticate " + username + ": " + e.toString());
 		} catch (final SOAPClientException e) {
@@ -125,6 +121,10 @@ public class Shibboleth_Authenticator implements Authenticator {
 			fail("Unexpected error occurred trying to authenticate " + username + ": "
 					+ e.toString());
 		}
+		
+		// Return a new authentication object
+		logger.info(username + " logged in successfully.");
+		return new Authentication(username, mechanism);
 	}
 
 	private void fail(String msg) throws IcatException {

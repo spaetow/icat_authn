@@ -70,14 +70,6 @@
             <id>ICAT Repo</id>
             <url>http://www.icatproject.org/mvn/repo</url>
         </repository>
-        
-        <!-- Commented out because the shibboleth-ecp-authclient is now on Maven Central! 
-        <repository>
-        	<id>Sonatype OSS Public Repository</id>
-        	<url>http://oss.sonatype.org/content/groups/public/</url>
-        </repository>
-        -->
-
     </repositories>
 
     <dependencies>
@@ -91,7 +83,7 @@
         <dependency>
             <groupId>org.icatproject</groupId>
             <artifactId>icat.utils</artifactId>
-            <version>4.3.0</version>
+            <version>4.4.0</version>
         </dependency>
 
         <dependency>
